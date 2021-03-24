@@ -1,0 +1,11 @@
+[Unit]
+Description=FabBot
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/workspace/FabBot
+ExecStart=/home/pi/.py_virtualenvs/FabBot/bin/python /home/pi/workspace/FabBot/main.py
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
