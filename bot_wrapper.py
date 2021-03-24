@@ -15,11 +15,7 @@ async def on_ready():
 #test comment
 @bot.event
 async def on_message(message):
-    if message.content == "test":
-        await fab.send_message(message.channel, "Testing 1 2 3!")
-
-    if "years ago" in message.content.lower():
-        await fab.send_message(message.channel, "https://www.youtube.com/watch?v=r_WWkQgT3To")
+    await fab.handle_message(message)
 
 @bot.event
 async def on_voice_state_update(member, before, after):
