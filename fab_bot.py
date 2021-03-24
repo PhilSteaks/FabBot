@@ -54,13 +54,13 @@ class FabBot():
         return self.send_message(system_channel, message)
 
     def __log_user_leave(self, member, channel):
-        return self.send_system_message("%s has left %s." %
+        return self.send_system_message("%s has disconnected from %s." %
                                         (display_name(member), channel.name))
 
     def __log_user_join(self, member, channel):
         member_name = member_display_text(member)
         channel_name = channel.name
-        return self.send_system_message("%s has joined %s." %
+        return self.send_system_message("%s has connected to %s." %
                                         (display_name(member), channel.name))
 
     def __log_user_channel_switch(self, member, before, after):
