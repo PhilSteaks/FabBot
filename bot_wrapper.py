@@ -17,7 +17,7 @@ async def on_message(message):
         await fab.send_message(message.channel, "Testing 1 2 3!")
 
     if "years ago" in message.content.lower():
-        await fab.send_message(message.channel, "<Insert link from Nelson")
+        await fab.send_message(message.channel, "https://www.youtube.com/watch?v=r_WWkQgT3To")
 
 @bot.event
 async def on_voice_state_update(member, before, after):
