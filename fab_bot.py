@@ -12,9 +12,6 @@ k_bot_token = "ODI0MTMxNjE5ODUyOTEwNjIy.YFq6YQ.ir_wi_s6sV3J95stoNtRrkzs0xg"
 async def do_nothing():
     pass
 
-def member_display_text(member):
-    return member.mention
-
 class FabBot():
     def __init__(self):
         self.bot = None
@@ -49,19 +46,16 @@ class FabBot():
         return self.send_message(system_channel, message)
 
     def __log_user_leave(self, member, channel):
-        member_name = member_display_text(member)
-        channel_name = channel.name
-        return self.send_system_message("%s has left %s." % (member_name, channel_name))
+        return self.send_system_message("%s has left %s." % (member.mention, channel.name))
 
     def __log_user_join(self, member, channel):
         member_name = member_display_text(member)
         channel_name = channel.name
-        return self.send_system_message("%s has joined %s." % (member_name, channel_name))
+        return self.send_system_message("%s has joined %s." % (member,mention, channel.name))
 
     def __log_user_channel_switch(self, member, before, after):
-        member_name = member_display_text(member)
         return self.send_system_message("%s has switched from %s to %s." % (
-                member_name, before.name, after.name))
+                member.mention, before.name, after.name))
 
     def log_user_channel_update(self, member, before, after):
         if before.channel is None and after.channel is not None:

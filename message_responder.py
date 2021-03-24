@@ -11,7 +11,7 @@ class MessageResponder():
         if message.content == "test":
             return self.__parse_test(message)
         if "years ago" in message.content.lower():
-            return self.__parse_years_ago(self, message)
+            return self.__parse_years_ago(message)
         return do_nothing()
 
     def __parse_test(self, message):
