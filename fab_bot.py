@@ -73,8 +73,10 @@ class FabBot():
             return self.__log_user_join(member, after.channel)
         if before.channel is not None and after.channel is None:
             return self.__log_user_leave(member, before.channel)
-        return self.__log_user_channel_switch(member, before.channel,
-                                              after.channel)
+        if before.channel is not after.channel:
+            return self.__log_user_channel_switch(member, before.channel,
+                                                  after.channel)
+        return do_nothing()
 
     def handle_message(self, message):
         return self.responder.parse_command(message)
