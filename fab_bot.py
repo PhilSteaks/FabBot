@@ -7,7 +7,7 @@ from message_responder import MessageResponder
 
 k_system_channel_id = 737860696779259945
 k_default_voice_channel = "General"
-k_bot_token = "ODI0MTMxNjE5ODUyOTEwNjIy.YFq6YQ.ir_wi_s6sV3J95stoNtRrkzs0xg"
+k_bot_token = "ODI0MTMxNjE5ODUyOTEwNjIy.YFq6YQ.PlIrW_VmGL-oS-kmgo3116BvlyI"
 
 async def do_nothing():
     pass
