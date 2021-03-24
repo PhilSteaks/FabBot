@@ -11,6 +11,7 @@ bot = Bot(intents=intents, command_prefix='$')
 async def on_ready():
     print("Bot is connected as {bot.user}")
 
+#test comment
 @bot.event
 async def on_message(message):
     if message.content == "test":
