@@ -1,7 +1,9 @@
 import asyncio
 
+
 async def do_nothing():
     pass
+
 
 class MessageResponder():
     def __init__(self, fab):
@@ -18,5 +20,5 @@ class MessageResponder():
         return self.fab.send_message(message.channel, "Testing 1 2 3!")
 
     def __parse_years_ago(self, message):
-        return self.fab.send_message(message.channel, "https://www.youtube.com/watch?v=r_WWkQgT3To")
-
+        return self.fab.send_message(
+            message.channel, "https://www.youtube.com/watch?v=r_WWkQgT3To")

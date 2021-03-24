@@ -9,13 +9,16 @@ k_system_channel_id = 737860696779259945
 k_default_voice_channel = "General"
 k_bot_token = "ODI0MTMxNjE5ODUyOTEwNjIy.YFq6YQ.PlIrW_VmGL-oS-kmgo3116BvlyI"
 
+
 async def do_nothing():
     pass
+
 
 def display_name(member):
     if member.nick:
         return member.nick
     return member.name
+
 
 class FabBot():
     def __init__(self):
@@ -51,25 +54,30 @@ class FabBot():
         return self.send_message(system_channel, message)
 
     def __log_user_leave(self, member, channel):
-        return self.send_system_message("%s has left %s." % (display_name(member), channel.name))
+        return self.send_system_message("%s has left %s." %
+                                        (display_name(member), channel.name))
 
     def __log_user_join(self, member, channel):
         member_name = member_display_text(member)
         channel_name = channel.name
-        return self.send_system_message("%s has joined %s." % (display_name(member), channel.name))
+        return self.send_system_message("%s has joined %s." %
+                                        (display_name(member), channel.name))
 
     def __log_user_channel_switch(self, member, before, after):
-        return self.send_system_message("%s has switched from %s to %s." % (
-                display_name(member), before.name, after.name))
+        return self.send_system_message(
+            "%s has switched from %s to %s." %
+            (display_name(member), before.name, after.name))
 
     def log_user_channel_update(self, member, before, after):
         if before.channel is None and after.channel is not None:
             return self.__log_user_join(member, after.channel)
         if before.channel is not None and after.channel is None:
             return self.__log_user_leave(member, before.channel)
-        return self.__log_user_channel_switch(member, before.channel, after.channel)
+        return self.__log_user_channel_switch(member, before.channel,
+                                              after.channel)
 
     def handle_message(self, message):
         return self.responder.parse_command(message)
+
 
 fab = FabBot()
