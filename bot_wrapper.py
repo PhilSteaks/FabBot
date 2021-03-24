@@ -12,7 +12,6 @@ async def on_ready():
     print("Bot is connected as {bot.user}")
     fab.real_init()
 
-#test comment
 @bot.event
 async def on_message(message):
     await fab.handle_message(message)
