@@ -3,6 +3,7 @@ import discord
 from discord.ext.commands import Bot
 
 k_system_channel_id = 737860696779259945
+k_default_voice_channel = "General"
 k_bot_token = "ODI0MTMxNjE5ODUyOTEwNjIy.YFq6YQ.ir_wi_s6sV3J95stoNtRrkzs0xg"
 
 def member_display_text(member):
@@ -11,12 +12,27 @@ def member_display_text(member):
 class FabBot():
     def __init__(self):
         self.bot = None
+        self.voice_channels = {}
+        self.text_channels = {}
 
     def register(self, bot_client):
         self.bot = bot_client
 
     def start(self):
         self.bot.run(k_bot_token)
+
+    def real_init(self):
+        for channel in self.bot.get_all_channels():
+            if channel.type == discord.ChannelType.text:
+                self.text_channels[channel.name] = channel
+            if channel.type == discord.ChannelType.voice:
+                self.voice_channels[channel.name] = channel
+
+        self.join_voice(self.voice_channels[k_default_voice_channel])
+        print("Bot started")
+
+    def join_voice(self, channel):
+        pass
 
     def send_message(self, channel, message):
         return channel.send(message)
