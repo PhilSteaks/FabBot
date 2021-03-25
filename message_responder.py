@@ -9,16 +9,16 @@ class MessageResponder():
     def __init__(self, fab):
         self.fab = fab
 
-    def parse_command(self, message):
+    async def parse_command(self, message):
         if message.content == "test":
-            return self.__parse_test(message)
+            await self.__parse_test(message)
         if "years ago" in message.content.lower():
-            return self.__parse_years_ago(message)
-        return do_nothing()
+            await self.__parse_years_ago(message)
+        return
 
-    def __parse_test(self, message):
-        return self.fab.send_message(message.channel, "Testing 1 2 3!")
+    async def __parse_test(self, message):
+        await self.fab.send_message(message.channel, "Testing 1 2 3!")
 
-    def __parse_years_ago(self, message):
-        return self.fab.send_message(
+    async def __parse_years_ago(self, message):
+        await self.fab.send_message(
             message.channel, "https://www.youtube.com/watch?v=r_WWkQgT3To")
