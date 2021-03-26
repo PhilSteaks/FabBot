@@ -1,11 +1,6 @@
 import asyncio
 
-
-async def do_nothing():
-    pass
-
-
-class MessageResponder():
+class MessageParser():
     def __init__(self, fab):
         self.fab = fab
 

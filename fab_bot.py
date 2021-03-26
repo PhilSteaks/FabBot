@@ -1,9 +1,11 @@
 # fab_bot.py
 import asyncio
 
+from channel_monitor_cog import ChannelMonitor
+from commands_cog import Commands
 import discord
 from discord.ext.commands import Bot
-from message_responder import MessageResponder
+from message_parser import MessageParser
 
 k_system_channel_id = 737860696779259945
 k_default_voice_channel = "General"
@@ -37,7 +39,7 @@ class FabBot(Bot):
                                      **kwargs)
         self.voice_channels = {}
         self.text_channels = {}
-        self.responder = MessageResponder(self)
+        self.responder = MessageParser(self)
 
     async def on_ready(self):
         print("Bot connected")
@@ -49,6 +51,7 @@ class FabBot(Bot):
 
     async def on_message(self, message):
         await self.responder.parse_command(message)
+        await self.process_commands(message)
 
     async def send_message(self, channel, message):
         await channel.send(message)
@@ -63,29 +66,6 @@ class FabBot(Bot):
             return
         await self.send_message(channel, message)
 
-    async def __log_user_leave(self, member, channel):
-        await self.send_system_message(
-            channel.guild, "**%s** has disconnected from %s." %
-            (member.display_name, channel.name))
-
-    async def __log_user_join(self, member, channel):
-        channel_name = channel.name
-        await self.send_system_message(
-            channel.guild, "**%s** has connected to %s." %
-            (member.display_name, channel.name))
-
-    async def __log_user_channel_switch(self, member, before, after):
-        if before.guild.id == after.guild.id:
-            return await self.send_system_message(
-                before.guild, "**%s** has switched from **%s** to **%s**." %
-                (member.display_name, before.name, after.name))
-
-    async def on_voice_state_update(self, member, before, after):
-        if before.channel is None and after.channel is not None:
-            return await self.__log_user_join(member, after.channel)
-        if before.channel is not None and after.channel is None:
-            return await self.__log_user_leave(member, before.channel)
-        if before.channel is not after.channel:
-            return await self.__log_user_channel_switch(
-                member, before.channel, after.channel)
-        return
+    def register_cogs(self):
+        self.add_cog(Commands(self))
+        self.add_cog(ChannelMonitor(self))
