@@ -60,10 +60,12 @@ class Announcer(commands.Cog):
             "switch": switch_path
         }
 
-    async def play_audio(self, audio_file):
-        pass
+    async def play_audio(self, voice_client, audio_file):
+        if voice_client.is_connected():
+            source = discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(audio_file))
+            voice_client.play(source)
 
-    async def announce_update(self, member, update):
+    async def announce_update(self, voice_client, member, update):
         key = member.display_name
         if key not in self._audio_paths:
             self.generate_member_audio(member)
@@ -73,23 +75,29 @@ class Announcer(commands.Cog):
             key = "user"
 
         if update in self._audio_paths[key]:
-            await self.play_audio(self._audio_paths[key][update])
+            await self.play_audio(voice_client, self._audio_paths[key][update])
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         # User joins a channel
         if before.channel is None and after.channel is not None:
-            await self.announce_update(member, "join")
+            voice_client = after.channel.guild.voice_client
+            if voice_client is not None:
+                await self.announce_update(voice_client, member, "join")
             return
 
         # User leaves a channel
         if before.channel is not None and after.channel is None:
-            await self.announce_update(member, "leave")
+            voice_client = before.channel.guild.voice_client
+            if voice_client is not None:
+                await self.announce_update(voice_client, member, "leave")
             return
 
         # User switches channels
         if before.channel is not after.channel:
-            await self.announce_update(member, "switch")
+            voice_client = before.channel.guild.voice_client
+            if voice_client is not None:
+                await self.announce_update(voice_client, member, "switch")
             return
 
     @commands.command()
@@ -97,6 +105,8 @@ class Announcer(commands.Cog):
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
         await channel.connect()
+        if ctx.voice_client is not None:
+            ctx.voice_client.stop()
 
     @commands.command()
     async def disconnect(self, ctx):
