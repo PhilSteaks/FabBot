@@ -93,21 +93,26 @@ class Announcer(commands.Cog):
         if before.channel is None and after.channel is not None:
             voice_client = after.channel.guild.voice_client
             if voice_client is not None:
-                await self.announce_update(voice_client, member, "join")
+                if voice_client.channel is after.channel:
+                    await self.announce_update(voice_client, member, "join")
             return
 
         # User leaves a channel
         if before.channel is not None and after.channel is None:
             voice_client = before.channel.guild.voice_client
             if voice_client is not None:
-                await self.announce_update(voice_client, member, "leave")
+                if voice_client.channel is before.channel:
+                    await self.announce_update(voice_client, member, "leave")
             return
 
         # User switches channels
         if before.channel is not after.channel:
             voice_client = before.channel.guild.voice_client
             if voice_client is not None:
-                await self.announce_update(voice_client, member, "switch")
+                if voice_client.channel is before.channel:
+                    await self.announce_update(voice_client, member, "switch")
+                if voice_client.channel is after.channel:
+                    await self.announce_update(voice_client, member, "join")
             return
 
     @commands.command()
