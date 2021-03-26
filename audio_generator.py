@@ -1,4 +1,6 @@
 from abc import ABCMeta, abstractmethod
+
+
 class AudioGenerator(metaclass=ABCMeta):
     def __init__(self):
         pass
@@ -13,5 +15,9 @@ class AudioGenerator(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def generate_audio(self, text, filename, voice=""):
+    def generate_audio_file(self, text, file_hint):
+        pass
+
+    @abstractmethod
+    def generate_direct_audio(self, text):
         pass
