@@ -47,7 +47,7 @@ class Announcer(commands.Cog):
         switch_message = switch_message_template.format(name)
         join_hint = join_hint_template.format(name)
         leave_hint = leave_hint_template.format(name)
-        switch_hint = switch_message_template.format(name)
+        switch_hint = switch_hint_template.format(name)
 
         join_path = self._audio_generator.generate_audio_file(
             join_message, join_hint)
