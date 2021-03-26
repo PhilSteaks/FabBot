@@ -9,10 +9,15 @@ class ChannelMonitor(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
+        # User joins a channel
         if before.channel is None and after.channel is not None:
             return await self.__log_user_join(member, after.channel)
+
+        # User leaves a channel
         if before.channel is not None and after.channel is None:
             return await self.__log_user_leave(member, before.channel)
+
+        # User switches channels
         if before.channel is not after.channel:
             return await self.__log_user_channel_switch(
                 member, before.channel, after.channel)

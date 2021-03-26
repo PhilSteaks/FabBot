@@ -3,7 +3,9 @@ import asyncio
 
 from channel_monitor_cog import ChannelMonitor
 from commands_cog import Commands
+from announcer_cog import Announcer
 import discord
+from discord.ext import commands
 from discord.ext.commands import Bot
 from message_parser import MessageParser
 
@@ -32,10 +34,12 @@ class FabBot(Bot):
                                   voice_states=True,
                                   messages=True,
                                   guilds=True)
-        super(FabBot, self).__init__(intents=intents,
-                                     command_prefix=k_command_prefix,
-                                     *args,
-                                     **kwargs)
+        super(FabBot, self).__init__(
+            intents=intents,
+            command_prefix=commands.when_mentioned_or(k_command_prefix),
+            *args,
+            **kwargs)
+
         self.voice_channels = {}
         self.text_channels = {}
         self.responder = MessageParser(self)
@@ -68,3 +72,4 @@ class FabBot(Bot):
     def register_cogs(self):
         self.add_cog(Commands(self))
         self.add_cog(ChannelMonitor(self))
+        self.add_cog(Announcer(self))
