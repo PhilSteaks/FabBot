@@ -7,7 +7,6 @@ import discord
 from discord.ext.commands import Bot
 from message_parser import MessageParser
 
-k_system_channel_id = 737860696779259945
 k_default_voice_channel = "General"
 k_bot_name = "FabBot"
 k_command_prefix = "fab "
