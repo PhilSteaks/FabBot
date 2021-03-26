@@ -41,7 +41,7 @@ class FabBot(Bot):
         self.responder = MessageParser(self)
 
     async def on_ready(self):
-        print("Bot connected")
+        print("Cnnected as {0.name}, {0.id}".format(self.user))
         for channel in self.get_all_channels():
             if channel.type == discord.ChannelType.text:
                 self.text_channels[channel.name] = channel
@@ -60,8 +60,8 @@ class FabBot(Bot):
         if not can_send(channel):
             channel = self.text_channels["system"]
         if channel is None:
-            print("Server %s(%d) does not have a system channel." %
-                  (guild.name, guild.id))
+            print("Server {0.name}({0.id}) does not have a system channel.".
+                  format(guild))
             return
         await self.send_message(channel, message)
 
