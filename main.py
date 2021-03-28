@@ -17,11 +17,11 @@ def get_token():
     try:
         with open(file_path) as token_file:
             token = token_file.read().strip(" \t\n\r")
+        return token
     except FileNotFoundError:
         print(
             "{0} not found. Make sure it is in the same directory as main.py.".
             format(k_token_file_name))
-    finally:
         return token
 
 

@@ -20,13 +20,13 @@ class GTTSAudio(AudioGenerator):
 
     @property
     def prefix(self):
-        return "gtts_"
+        return "gtts"
 
     def set_voice(self, voice):
         pass
 
     def generate_audio_file(self, text, file_hint):
-        file_name = self.prefix + file_hint + self._suffix
+        file_name = self.prefix + "_" + file_hint + self._suffix
         file_path = pathlib.Path(os.path.join(str(self._audio_dir), file_name))
 
         if not file_path.exists():
