@@ -150,7 +150,8 @@ class Announcer(commands.Cog):
         await channel.connect()
         if ctx.voice_client is not None:
             ctx.voice_client.stop()
-            await self.say_audio(ctx.voice_client, "Hello.")
+            if self._voice == k_gtts_voice:
+                await self.say_audio(ctx.voice_client, "Hello.")
 
     @commands.command()
     async def disconnect(self, ctx):
@@ -207,6 +208,7 @@ class Announcer(commands.Cog):
 
         if text == k_gtts_voice:
             self._audio_generator = GTTSAudio(self._audio_dir)
+            self._voice = text
             await self.say_audio(ctx.voice_client, "voice changed.")
             return
 
