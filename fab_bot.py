@@ -1,21 +1,22 @@
 # fab_bot.py
+
+# Standard library
 import asyncio
 
-from channel_monitor_cog import ChannelMonitor
-from commands_cog import Commands
-from announcer_cog import Announcer
+# Third party libaries
 import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
+
+# Our libraries
+from announcer_cog import Announcer
+from channel_monitor_cog import ChannelMonitor
+from commands_cog import Commands
 from message_parser import MessageParser
 
 k_default_voice_channel = "General"
 k_bot_name = "FabBot"
 k_command_prefix = "fab "
-
-
-async def do_nothing():
-    pass
 
 
 def can_send(channel):
@@ -30,6 +31,7 @@ def can_send(channel):
 
 class FabBot(Bot):
     def __init__(self, *args, **kwargs):
+        """ Class Constructor """
         intents = discord.Intents(members=True,
                                   voice_states=True,
                                   messages=True,
@@ -40,12 +42,16 @@ class FabBot(Bot):
             *args,
             **kwargs)
 
-        self.voice_channels = {}
-        self.text_channels = {}
-        self.responder = MessageParser(self)
+        self.voice_channels = dict()
+        self.text_channels = dict()
+        self.parser = MessageParser(self)
 
     async def on_ready(self):
-        print("Cnnected as {0.name}, {0.id}".format(self.user))
+        """ What to do when the bot goes online """
+        print("Connected as {0.name}, {0.id}".format(self.user))
+
+        # Create a hash table of all the channels on the server so we can
+        # reference them by name
         for channel in self.get_all_channels():
             if channel.type == discord.ChannelType.text:
                 self.text_channels[channel.name] = channel
@@ -53,13 +59,20 @@ class FabBot(Bot):
                 self.voice_channels[channel.name] = channel
 
     async def on_message(self, message):
-        await self.responder.parse_command(message)
+        """ What to do when a message is received on a text channel """
+        await self.parser.parse_command(message)
+
+        # Needed to handle bot commands
         await self.process_commands(message)
 
     async def send_message(self, channel, message):
+        """ A wrapper for sending messages """
         await channel.send(message)
 
     async def send_system_message(self, guild, message):
+        """ Sends to the server's system channel. If not accessible, sends to a
+            channel named "system". Does nothing if both fail.
+        """
         channel = guild.system_channel
         if not can_send(channel):
             channel = self.text_channels["system"]
@@ -70,6 +83,7 @@ class FabBot(Bot):
         await self.send_message(channel, message)
 
     def register_cogs(self):
+        """ Registers the cogs that the bot will have """
         self.add_cog(Commands(self))
         self.add_cog(ChannelMonitor(self))
         self.add_cog(Announcer(self))

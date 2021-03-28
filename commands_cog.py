@@ -1,6 +1,7 @@
 # commands_cog.py
-from discord.ext import commands
+
 import discord
+from discord.ext import commands
 
 
 class Commands(commands.Cog):
@@ -10,8 +11,8 @@ class Commands(commands.Cog):
     @commands.command()
     async def hello(self, ctx, *, member: discord.Member = None):
         member = member or ctx.author
-        await ctx.send("Hello {0.name}~".format(member))
+        await ctx.send("Hello {0.name}".format(member))
 
     @commands.command()
     async def ulous(self, ctx):
-        await ctx.send("Thats right")
+        await ctx.send("Fabulous~")

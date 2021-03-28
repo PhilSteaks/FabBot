@@ -1,10 +1,15 @@
 # gtts_audio.py
+
+
+# Standard library
+from io import BytesIO
 import os
 import pathlib
-from io import BytesIO
 
+# Third party libaries
 from gtts import gTTS
 
+# Our libraries
 from audio_generator import AudioGenerator
 
 

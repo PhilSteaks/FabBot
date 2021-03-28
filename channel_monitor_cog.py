@@ -1,14 +1,17 @@
 # channel_monitor_cog.py
-from discord.ext import commands
+
 import discord
+from discord.ext import commands
 
 
 class ChannelMonitor(commands.Cog):
+    """ Cog to log when a user leaves """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
+        """ What to do when someone leaves or joins a voice channel """
         # User joins a channel
         if before.channel is None and after.channel is not None:
             return await self.__log_user_join(member, after.channel)

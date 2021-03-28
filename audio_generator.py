@@ -1,7 +1,10 @@
+# audio_generator.py
+
 from abc import ABCMeta, abstractmethod
 
 
 class AudioGenerator(metaclass=ABCMeta):
+    """ Abstract base class for defining our tts interface """
     def __init__(self):
         pass
 

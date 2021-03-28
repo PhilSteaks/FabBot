@@ -1,6 +1,10 @@
 # main.py
+
+# Standard library
 import os
 import sys
+
+# Our libraries
 from fab_bot import FabBot
 
 
@@ -15,8 +19,8 @@ def get_token():
             token = token_file.read().strip(" \t\n\r")
     except FileNotFoundError:
         print(
-            "{0} not found. Make sure it is in your current directory.".format(
-                k_token_file_name))
+            "{0} not found. Make sure it is in the same directory as main.py.".
+            format(k_token_file_name))
     finally:
         return token
 

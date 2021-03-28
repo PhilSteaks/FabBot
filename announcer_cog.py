@@ -1,11 +1,14 @@
 # announce_cog.py
 
+# Standard library
 import os
 import pathlib
 
-from discord.ext import commands
+# Third party libaries
 import discord
+from discord.ext import commands
 
+# Our libraries
 from gtts_audio import GTTSAudio
 
 k_audio_dir = "audio_files"
@@ -19,29 +22,35 @@ switch_hint_template = "{0}_switch"
 
 class Announcer(commands.Cog):
     def __init__(self, bot):
+        """ Class Constructor"""
+        # Good practice to declare all the variables you'll use here.
+        # So they'll still be defined in case the remaining init methods fail
         self.bot = bot
         self._audio_dir = None
         self._audio_generator = None
 
         self.__init_dir()
         self._audio_generator = GTTSAudio(self._audio_dir)
-        self._audio_paths = {}
+        self._audio_paths = dict()
 
         self.generate_initial_audio()
 
     def __init_dir(self):
+        """ Creates the audio directory if it doesn't exist """
         self._audio_dir = pathlib.Path(
             os.path.abspath((os.path.join(os.path.dirname(__file__),
                                           k_audio_dir))))
         self._audio_dir.mkdir(parents=True, exist_ok=True)
 
     def generate_initial_audio(self):
+        """ Generates the backup audio to be played if something fails """
         self.generate_audio_set("user")
 
     def generate_member_audio(self, member):
         return self.generate_audio_set(member.display_name)
 
     def generate_audio_set(self, name):
+        """ Generates all the audio files associated for a specific user """
         join_message = join_message_template.format(name)
         leave_message = leave_message_template.format(name)
         switch_message = switch_message_template.format(name)
@@ -89,6 +98,7 @@ class Announcer(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
+        """ What to do when someone leaves or joins a voice channel """
         # User joins a channel
         if before.channel is None and after.channel is not None:
             voice_client = after.channel.guild.voice_client
@@ -117,6 +127,7 @@ class Announcer(commands.Cog):
 
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel):
+        """ Join the voice channel specified in the command """
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
         await channel.connect()
@@ -125,13 +136,16 @@ class Announcer(commands.Cog):
 
     @commands.command()
     async def disconnect(self, ctx):
-        await ctx.voice_client.disconnect()
+        """ Disconnects from the current voice channel """
+        if ctx.voice_client is not None:
+            await ctx.voice_client.disconnect()
 
     @commands.command()
     async def say(self, ctx, text):
+        """ Speak some text to the channel """
         if (ctx.voice_client is None) or (not ctx.voice_client.is_connected()):
             ctx.channel.send("I'm not currently connected to a voice channel.")
             return
 
         await ctx.channel.send("I can't do this yet.")
-        #await self.say_audio(ctx.voice_client, text)
+        # await self.say_audio(ctx.voice_client, text)
