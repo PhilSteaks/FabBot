@@ -40,4 +40,4 @@ class GTTSAudio(AudioGenerator):
         file_pointer = BytesIO()
         gTTS(text).write_to_fp(file_pointer)
         file_pointer.seek(0)
-        return file_pointer.read()
+        return file_pointer

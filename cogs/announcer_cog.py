@@ -10,6 +10,7 @@ from discord.ext import commands
 
 # Our libraries
 from tts_lib.gtts_audio import GTTSAudio
+from tts_lib.ffmpeg_pcm_audio import FFmpegPCMAudio
 
 k_audio_dir = "audio_files"
 join_message_template = "{0} has joined the channel."
@@ -74,7 +75,7 @@ class Announcer(commands.Cog):
     async def say_audio(self, voice_client, text):
         io = self._audio_generator.generate_direct_audio(text)
         source = discord.PCMVolumeTransformer(
-            discord.FFmpegPCMAudio(io, pipe=True))
+            FFmpegPCMAudio(io.read(), pipe=True))
         voice_client.play(source)
 
     async def play_audio_file(self, voice_client, audio_file):
@@ -133,12 +134,14 @@ class Announcer(commands.Cog):
         await channel.connect()
         if ctx.voice_client is not None:
             ctx.voice_client.stop()
+            await self.say_audio(ctx.voice_client, "Hello.")
 
     @commands.command()
     async def disconnect(self, ctx):
         """ Disconnects from the current voice channel """
         if ctx.voice_client is not None:
-            await ctx.voice_client.disconnect()
+            await self.say_audio(ctx.voice_client, "Goodbye.")
+            ctx.voice_client.disconnect()
 
     @commands.command()
     async def say(self, ctx, text):
@@ -147,5 +150,4 @@ class Announcer(commands.Cog):
             ctx.channel.send("I'm not currently connected to a voice channel.")
             return
 
-        await ctx.channel.send("I can't do this yet.")
-        # await self.say_audio(ctx.voice_client, text)
+        await self.say_audio(ctx.voice_client, text)
