@@ -169,7 +169,7 @@ class Announcer(commands.Cog):
 
         if self._voice != k_gtts_voice:
             await ctx.channel.send(
-                "Only supported with {0} voice for now. Type \"fab voice\" for more information."
+                "Only supported with `{0}` voice for now. Type \"fab voice\" for more information."
                 .format(k_gtts_voice))
             return
 
