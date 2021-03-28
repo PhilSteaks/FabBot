@@ -10,7 +10,7 @@ import pathlib
 from gtts import gTTS
 
 # Our libraries
-from audio_generator import AudioGenerator
+from tts_lib.audio_generator import AudioGenerator
 
 
 class GTTSAudio(AudioGenerator):

@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands
 
 # Our libraries
-from gtts_audio import GTTSAudio
+from tts_lib.gtts_audio import GTTSAudio
 
 k_audio_dir = "audio_files"
 join_message_template = "{0} has joined the channel."
@@ -38,7 +38,7 @@ class Announcer(commands.Cog):
     def __init_dir(self):
         """ Creates the audio directory if it doesn't exist """
         self._audio_dir = pathlib.Path(
-            os.path.abspath((os.path.join(os.path.dirname(__file__),
+            os.path.abspath((os.path.join(os.path.dirname(__file__), "..",
                                           k_audio_dir))))
         self._audio_dir.mkdir(parents=True, exist_ok=True)
 

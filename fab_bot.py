@@ -9,9 +9,9 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 
 # Our libraries
-from announcer_cog import Announcer
-from channel_monitor_cog import ChannelMonitor
-from commands_cog import Commands
+from cogs.announcer_cog import Announcer
+from cogs.channel_monitor_cog import ChannelMonitor
+from cogs.commands_cog import Commands
 from message_parser import MessageParser
 
 k_default_voice_channel = "General"
