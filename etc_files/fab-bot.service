@@ -4,6 +4,7 @@ Description=FabBot
 [Service]
 Type=simple
 WorkingDirectory=/home/pi/workspace/FabBot
+Environment="GOOGLE_APPLICATION_CREDENTIALS=/home/pi/workspace/FabBot/auth/<gcloud_auth>.json"
 ExecStart=/home/pi/.py_virtualenvs/FabBot/bin/python /home/pi/workspace/FabBot/main.py
 KillSignal=SIGINT
 
