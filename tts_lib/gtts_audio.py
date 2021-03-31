@@ -19,8 +19,21 @@ class GTTSAudio(AudioGenerator):
         self._suffix = ".mp3"
 
     @property
+    def init_success(self):
+        return True
+
+    @property
     def prefix(self):
         return "gtts"
+
+    @property
+    def default_voice(self):
+        return "basic"
+
+    def available_voices(self):
+        return list([
+            "basic",
+        ])
 
     def set_voice(self, voice):
         pass

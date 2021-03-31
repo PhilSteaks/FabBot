@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands
 
 # Our libraries
+from tts_lib.audio_generator import AudioGenerator
 from tts_lib.gtts_audio import GTTSAudio
 from tts_lib.gcloud_tts_audio import GcloudAudio
 from tts_lib.ffmpeg_pcm_audio import FFmpegPCMAudio
@@ -31,14 +32,17 @@ class Announcer(commands.Cog):
         # So they'll still be defined in case the remaining init methods fail
         self.bot = bot
         self._audio_dir = None
+
+        self._voice = None
+        self._default_voice = None
+        self._available_voices = list()
+
+        self._audio_paths = dict()
         self._audio_generator = None
+        self._available_generators = list()
 
         self.__init_dir()
-        self._audio_generator = GcloudAudio(self._audio_dir)
-        self._voice = k_default_voice
-        self._audio_paths = dict()
-        self._available_voices = self._audio_generator.available_voices()
-        self._available_voices.append(k_gtts_voice)
+        self.__init_generators()
 
         self.generate_initial_audio()
 
@@ -49,17 +53,72 @@ class Announcer(commands.Cog):
                                           k_audio_dir))))
         self._audio_dir.mkdir(parents=True, exist_ok=True)
 
+    def __init_generators(self):
+        """ Registers the functionality of each generator """
+        # The first generator in the list has the highest priority for defaults
+        # and naming conflicts
+        for Generator in AudioGenerator.__subclasses__():
+            generator = Generator(self._audio_dir)
+            if (generator.init_success):
+                if self._audio_generator is None:
+                    self._audio_generator = generator
+                if self._default_voice is None:
+                    self._default_voice = generator.default_voice
+                self._available_voices.extend(generator.available_voices())
+                self._available_generators.append(generator)
+
+        self._voice = self._default_voice
+
+        if self._audio_generator is None:
+            raise RuntimeError("No audio generator could be used.")
+        if self._voice is None:
+            raise RuntimeError("No voice has been set.")
+
+    def __voice_help_str(self):
+        voice_list = []
+        for voice in self._available_voices:
+            indicate_current = False
+            if voice == self._voice:
+                indicate_current = True
+
+            if voice == self._default_voice:
+                voice += " (default)"
+
+            if indicate_current:
+                voice = "**{0} <- selected**".format(voice)
+
+            voice_list.append(voice)
+        display_header = "type `fab voice <selection>` to change the voice.\n"
+        "Available voices:\n  "
+        display_list = "\n  ".join(voice_list)
+        return str(display_header + display_list)
+
+    def _change_voice(self, desired_voice):
+        """ Changes the currently spoken voice.
+            Returns a boolean indicating whether or not the voice was changed
+        """
+        if desired_voice == self._voice:
+            return False
+
+        for generator in self._available_generators:
+            for voice in generator.available_voices():
+                if desired_voice == voice:
+                    if self._audio_generator != generator:
+                        self._audio_generator = generator
+                    self._voice = voice
+                    self._audio_generator.set_voice(self._voice)
+                    return True
+        raise KeyError
+
     def generate_initial_audio(self):
         """ Generates the backup audio to be played if something fails """
-        self.generate_audio_set("user")
         for voice in self._available_voices:
-            if voice == k_gtts_voice:
-                continue
-            self._audio_generator.set_voice(voice)
+            self._change_voice(voice)
+            self.generate_audio_set("user")
             audio_path = self._audio_generator.generate_audio_file(
-                "voice changed.", "voice_changed")
+                "voice changed", "voice_changed")
             self._audio_paths[voice + "changed"] = audio_path
-        self._audio_generator.set_voice(self._voice)
+        self._change_voice(self._default_voice)
 
     def generate_member_audio(self, member):
         return self.generate_audio_set(member.display_name)
@@ -87,6 +146,9 @@ class Announcer(commands.Cog):
         }
 
     async def say_audio(self, voice_client, text):
+        # TODO(Phil): Remove this when the gcloud lib can say audio
+        if self._voice != "basic":
+            return
         io = self._audio_generator.generate_direct_audio(text)
         source = discord.PCMVolumeTransformer(
             FFmpegPCMAudio(io.read(), pipe=True))
@@ -150,14 +212,14 @@ class Announcer(commands.Cog):
         await channel.connect()
         if ctx.voice_client is not None:
             ctx.voice_client.stop()
-            if self._voice == k_gtts_voice:
-                await self.say_audio(ctx.voice_client, "Hello.")
+            await self.say_audio(ctx.voice_client, "hello")
 
     @commands.command()
     async def disconnect(self, ctx):
         """ Disconnects from the current voice channel """
         if ctx.voice_client is not None:
-            await self.say_audio(ctx.voice_client, "Goodbye.")
+            # TODO(Phil): Remove this when the gcloud lib can say audio
+            await self.say_audio(ctx.voice_client, "bye")
             await ctx.voice_client.disconnect()
 
     @commands.command()
@@ -168,59 +230,29 @@ class Announcer(commands.Cog):
                 "I'm not currently connected to a voice channel.")
             return
 
-        if self._voice != k_gtts_voice:
+        # TODO(Phil): Remove this when the gcloud lib can say audio
+        if self._voice != "basic":
             await ctx.channel.send(
                 "Only supported with `{0}` voice for now. Type \"fab voice\" for more information."
-                .format(k_gtts_voice))
+                .format("basic"))
             return
 
         await self.say_audio(ctx.voice_client, text)
 
     @commands.command()
     async def voice(self, ctx, *, text=""):
-        """ Speak some text to the channel """
+        """ Change the voice used when speaking """
         if text == "":
-            voice_list = []
-            for voice in self._available_voices:
-                if voice == "default":
-                    continue
-
-                if voice == k_default_voice:
-                    if voice == self._voice:
-                        voice = "**{0} (default)**".format(voice)
-                    else:
-                        voice += " (default)"
-                elif voice == self._voice:
-                    voice = "**{0}**".format(voice)
-
-                voice_list.append(voice)
-            display_header = "Available voices:\n  "
-            display_list = "\n  ".join(voice_list)
-            await ctx.channel.send(display_header + display_list)
+            await ctx.channel.send(self.__voice_help_str())
             return
 
         text = text.lower()
         if text == "default":
-            text = k_default_voice
-        # Do nothing if already the current voice
-        if text == self._voice:
-            return
-
-        if text == k_gtts_voice:
-            self._audio_generator = GTTSAudio(self._audio_dir)
-            self._voice = text
-            await self.say_audio(ctx.voice_client, "voice changed.")
-            return
-
-        for voice in self._available_voices:
-            if text == voice:
-                if self._voice == k_gtts_voice:
-                    # Switch generator if needed
-                    self._audio_generator = GcloudAudio(self._audio_dir)
-
-                self._audio_generator.set_voice(text)
-                self._voice = text
+            text = self._default_voice
+        try:
+            changed = self._change_voice(text)
+            if changed:
                 await self.play_audio_file(ctx.voice_client,
                                            self._audio_paths[text + "changed"])
-                return
-        await ctx.channel.send("Voice not supported.")
+        except KeyError:
+            await ctx.channel.send("Voice not supported.")
