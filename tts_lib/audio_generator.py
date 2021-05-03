@@ -23,4 +23,5 @@ class AudioGenerator(metaclass=ABCMeta):
 
     @abstractmethod
     def generate_direct_audio(self, text):
-        pass
+        """ Generates a bytes object containing the audio
+        """

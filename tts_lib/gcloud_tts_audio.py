@@ -16,7 +16,7 @@ class GcloudAudio(AudioGenerator):
         self._tts_client = texttospeech.TextToSpeechClient()
         self._gcloud_prefix = "gcloud_"
         self._voice_map = dict()
-        self.__map_voices()
+        self._map_voices()
         self._voice = self._voice_map[self.default_voice]
         self._inited = True
 
@@ -35,7 +35,7 @@ class GcloudAudio(AudioGenerator):
     def available_voices(self):
         return list(self._voice_map.keys())
 
-    def __map_voices(self):
+    def _map_voices(self):
         self._voice_map = {
             "male 1": "en-US-Wavenet-A",
             "male 2": "en-US-Standard-B",
@@ -65,20 +65,20 @@ class GcloudAudio(AudioGenerator):
             "uk female 4": "en-GB-Standard-C",
             "uk female 5": "en-GB-Wavenet-F",
             "uk female 6": "en-GB-Wavenet-F",
-            "in male 1": "en-IN-Wavenet-B",
-            "in male 2": "en-IN-Standard-B",
-            "in male 3": "en-IN-Wavenet-C",
-            "in male 4": "en-IN-Standard-C",
-            "in female 1": "en-IN-Wavenet-A",
-            "in female 2": "en-IN-Standard-A",
-            "in female 3": "en-IN-Wavenet-D",
-            "in female 4": "en-IN-Standard-D",
+            "indi male 1": "en-IN-Wavenet-B",
+            "indi male 2": "en-IN-Standard-B",
+            "indi male 3": "en-IN-Wavenet-C",
+            "indi male 4": "en-IN-Standard-C",
+            "indi female 1": "en-IN-Wavenet-A",
+            "indi female 2": "en-IN-Standard-A",
+            "indi female 3": "en-IN-Wavenet-D",
+            "indi female 4": "en-IN-Standard-D",
         }
 
     def set_voice(self, voice):
         self._voice = self._voice_map[voice]
 
-    def __synth_audio(self, text):
+    def _synth_audio(self, text):
         synthesis_input = texttospeech.SynthesisInput(text=text)
         voice = texttospeech.VoiceSelectionParams(
             language_code="en-US",
@@ -94,11 +94,12 @@ class GcloudAudio(AudioGenerator):
         file_name = self.prefix + "_" + file_hint + self._suffix
         file_path = pathlib.Path(os.path.join(str(self._audio_dir), file_name))
         if not file_path.exists():
-            audio = self.__synth_audio(text)
+            audio = self._synth_audio(text)
             with open(file_path, "wb") as out:
                 out.write(audio.audio_content)
                 print("Generated new audio file {0}".format(file_path))
         return file_path
 
     def generate_direct_audio(self, text):
-        pass
+        audio = self._synth_audio(text)
+        return audio.audio_content

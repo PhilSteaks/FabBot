@@ -147,11 +147,9 @@ class Announcer(commands.Cog):
 
     async def say_audio(self, voice_client, text):
         # TODO(Phil): Remove this when the gcloud lib can say audio
-        if self._voice != "basic":
-            return
-        io = self._audio_generator.generate_direct_audio(text)
+        audio_bytes = self._audio_generator.generate_direct_audio(text)
         source = discord.PCMVolumeTransformer(
-            FFmpegPCMAudio(io.read(), pipe=True))
+            FFmpegPCMAudio(audio_bytes, pipe=True))
         voice_client.play(source)
 
     async def play_audio_file(self, voice_client, audio_file):
@@ -229,14 +227,6 @@ class Announcer(commands.Cog):
             await ctx.channel.send(
                 "I'm not currently connected to a voice channel.")
             return
-
-        # TODO(Phil): Remove this when the gcloud lib can say audio
-        if self._voice != "basic":
-            await ctx.channel.send(
-                "Only supported with `{0}` voice for now. Type \"fab voice\" for more information."
-                .format("basic"))
-            return
-
         await self.say_audio(ctx.voice_client, text)
 
     @commands.command()
