@@ -21,7 +21,7 @@ k_default_voice = "uk male 1"
 k_gtts_voice = "robot"
 k_audio_dir = "audio_files"
 k_config_dir = "configs"
-k_user_to_name_file  = "UsersToNames.yml"
+k_user_to_name_file = "UsersToNames.yml"
 join_message_template = "{0} has joined the channel."
 leave_message_template = "{0} has left the channel."
 switch_message_template = "{0} has switched channels."
@@ -38,6 +38,7 @@ class Announcer(commands.Cog):
         self.bot = bot
         self._audio_dir = None
         self._rejoin = True
+        self._speak_names = False
 
         self._voice = None
         self._default_voice = None
@@ -245,7 +246,7 @@ class Announcer(commands.Cog):
 
     @commands.command()
     async def join(self, ctx, *, channel: discord.VoiceChannel):
-        """ Join the voice channel specified in the command """
+        """ <channel> Join the voice channel specified in the command """
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
         await channel.connect()
@@ -263,7 +264,7 @@ class Announcer(commands.Cog):
 
     @commands.command()
     async def say(self, ctx, *, text):
-        """ Speak some text to the channel """
+        """ <text> Speak some text to the channel """
         if (ctx.voice_client is None) or (not ctx.voice_client.is_connected()):
             await ctx.channel.send(
                 "I'm not currently connected to a voice channel.")
@@ -272,7 +273,7 @@ class Announcer(commands.Cog):
 
     @commands.command()
     async def voice(self, ctx, *, text=""):
-        """ Change the voice used when speaking """
+        """ <option> Change the voice used when speaking """
         if text == "":
             await ctx.channel.send(self.__voice_help_str())
             return
@@ -288,6 +289,13 @@ class Announcer(commands.Cog):
         except KeyError:
             await ctx.channel.send("Voice not supported.")
 
+    @commands.command()
+    async def speak_names(self, ctx, *, text):
+        """ <on/off> Speak the user names of messages in tts """
+        if "on" in text:
+            self._speak_names = True
+        if "off" in text:
+            self._speak_names = False
 
     async def parse_command(self, message):
         ctx = await self.bot.get_context(message)
@@ -295,8 +303,10 @@ class Announcer(commands.Cog):
             return
         if message.channel.name == "tts" or message.channel.name == "📣tts":
             spoken_message = message.content
-            if message.author.name in self._users:
-                user = self._users[message.author.name]
-                spoken_message = user["name"] + " said " +  message.content
+            if self._speak_names:
+                if message.author.name in self._users:
+                    user = self._users[message.author.name]
+                    spoken_message = self._users[
+                        "name"] + " said " + message.content
 
             await self.say_audio(ctx.voice_client, spoken_message)
