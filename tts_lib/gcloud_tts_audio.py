@@ -30,7 +30,7 @@ class GcloudAudio(AudioGenerator):
 
     @property
     def default_voice(self):
-        return "female 3"
+        return "uk male 1"
 
     def available_voices(self):
         return list(self._voice_map.keys())
@@ -38,33 +38,22 @@ class GcloudAudio(AudioGenerator):
     def _map_voices(self):
         self._voice_map = {
             "male 1": "en-US-Wavenet-A",
-            "male 2": "en-US-Standard-B",
-            "male 3": "en-US-Wavenet-B",
-            "male 4": "en-US-Standard-D",
-            "male 5": "en-US-Wavenet-D",
-            "male 6": "en-US-Standard-I",
-            "male 7": "en-US-Wavenet-I",
-            "male 8": "en-US-Standard-J",
-            "male 9": "en-US-Wavenet-J",
-            "female 1": "en-US-Wavenet-C",
-            "female 2": "en-US-Standard-C",
-            "female 3": "en-US-Wavenet-E",
-            "female 4": "en-US-Standard-E",
-            "female 5": "en-US-Wavenet-F",
-            "female 6": "en-US-Wavenet-G",
-            "female 7": "en-US-Standard-G",
-            "female 8": "en-US-Wavenet-H",
-            "female 9": "en-US-Standard-H",
+            "male 2": "en-US-Wavenet-B",
+            "male 3": "en-US-Wavenet-D",
+            "male 4": "en-US-Wavenet-J",
+            "female 1": "en-US-Wavenet-E",
+            "female 2": "en-US-Wavenet-F",
+            "female 3": "en-US-Wavenet-G",
+            "female 4": "en-US-Wavenet-H",
+            "female 5": "en-US-Standard-H",
             "uk male 1": "en-GB-Wavenet-B",
             "uk male 2": "en-GB-Standard-B",
             "uk male 3": "en-GB-Wavenet-D",
             "uk male 4": "en-GB-Standard-D",
             "uk female 1": "en-GB-Wavenet-A",
-            "uk female 2": "en-GB-Standard-A",
-            "uk female 3": "en-GB-Wavenet-C",
-            "uk female 4": "en-GB-Standard-C",
-            "uk female 5": "en-GB-Wavenet-F",
-            "uk female 6": "en-GB-Wavenet-F",
+            "uk female 2": "en-GB-Wavenet-C",
+            "uk female 3": "en-GB-Standard-C",
+            "uk female 4": "en-GB-Wavenet-F",
             "indi male 1": "en-IN-Wavenet-B",
             "indi male 2": "en-IN-Standard-B",
             "indi male 3": "en-IN-Wavenet-C",

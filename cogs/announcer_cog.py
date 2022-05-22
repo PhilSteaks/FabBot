@@ -1,12 +1,14 @@
 # announce_cog.py
 
 # Standard library
+import asyncio
 import os
 import pathlib
 
 # Third party libaries
 import discord
 from discord.ext import commands
+import yaml
 
 # Our libraries
 from tts_lib.audio_generator import AudioGenerator
@@ -14,9 +16,12 @@ from tts_lib.gtts_audio import GTTSAudio
 from tts_lib.gcloud_tts_audio import GcloudAudio
 from tts_lib.ffmpeg_pcm_audio import FFmpegPCMAudio
 
-k_default_voice = "female 3"
+k_rejoin_frequency = 60
+k_default_voice = "uk male 1"
 k_gtts_voice = "robot"
 k_audio_dir = "audio_files"
+k_config_dir = "configs"
+k_user_to_name_file  = "UsersToNames.yml"
 join_message_template = "{0} has joined the channel."
 leave_message_template = "{0} has left the channel."
 switch_message_template = "{0} has switched channels."
@@ -32,6 +37,7 @@ class Announcer(commands.Cog):
         # So they'll still be defined in case the remaining init methods fail
         self.bot = bot
         self._audio_dir = None
+        self._rejoin = True
 
         self._voice = None
         self._default_voice = None
@@ -40,10 +46,12 @@ class Announcer(commands.Cog):
         self._audio_paths = dict()
         self._audio_generator = None
         self._available_generators = list()
+        self._users = dict()
 
         self.__init_dir()
         self.__init_generators()
 
+        self.read_configs()
         self.generate_initial_audio()
 
     def __init_dir(self):
@@ -67,7 +75,7 @@ class Announcer(commands.Cog):
                 self._available_voices.extend(generator.available_voices())
                 self._available_generators.append(generator)
 
-        self._voice = self._default_voice
+        self._change_voice(k_default_voice)
 
         if self._audio_generator is None:
             raise RuntimeError("No audio generator could be used.")
@@ -97,7 +105,7 @@ class Announcer(commands.Cog):
         """ Changes the currently spoken voice.
             Returns a boolean indicating whether or not the voice was changed
         """
-        if desired_voice == self._voice:
+        if self._voice and (desired_voice == self._voice):
             return False
 
         for generator in self._available_generators:
@@ -110,6 +118,39 @@ class Announcer(commands.Cog):
                     return True
         raise KeyError
 
+    async def _rejoin_general(self):
+        """ Join the General channel if flag is set """
+        if not self._rejoin:
+            return
+        if self.bot.voice_clients:
+            return
+        voice_client = await self.bot.voice_channels["General"].connect(
+            reconnect=False, timeout=1)
+        await self.say_audio(voice_client, "hello")
+
+    async def _periodic_rejoin(self):
+        """ Run loop to trigger rejoins """
+        while True:
+            await asyncio.gather(asyncio.sleep(k_rejoin_frequency),
+                                 self._rejoin_general())
+
+    async def start_periodic_rejoin(self):
+        """ Init the run loop """
+        await self._periodic_rejoin()
+
+    def _read_users(self):
+        """ Loads special user configs """
+        users_to_names_path = pathlib.Path(
+            os.path.abspath((os.path.join(os.path.dirname(__file__), "..",
+                                          k_config_dir, k_user_to_name_file))))
+        with open(users_to_names_path, 'r') as users_to_names_file:
+            self._users = yaml.safe_load(users_to_names_file)
+            print(self._users)
+
+    def read_configs(self):
+        """ Reads the config files and loads them """
+        self._read_users()
+
     def generate_initial_audio(self):
         """ Generates the backup audio to be played if something fails """
         for voice in self._available_voices:
@@ -118,7 +159,7 @@ class Announcer(commands.Cog):
             audio_path = self._audio_generator.generate_audio_file(
                 "voice changed", "voice_changed")
             self._audio_paths[voice + "changed"] = audio_path
-        self._change_voice(self._default_voice)
+        self._change_voice(k_default_voice)
 
     def generate_member_audio(self, member):
         return self.generate_audio_set(member.display_name)
@@ -246,3 +287,16 @@ class Announcer(commands.Cog):
                                            self._audio_paths[text + "changed"])
         except KeyError:
             await ctx.channel.send("Voice not supported.")
+
+
+    async def parse_command(self, message):
+        ctx = await self.bot.get_context(message)
+        if (ctx.voice_client is None) or (not ctx.voice_client.is_connected()):
+            return
+        if message.channel.name == "tts" or message.channel.name == "📣tts":
+            spoken_message = message.content
+            if message.author.name in self._users:
+                user = self._users[message.author.name]
+                spoken_message = user["name"] + " said " +  message.content
+
+            await self.say_audio(ctx.voice_client, spoken_message)

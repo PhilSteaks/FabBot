@@ -7,6 +7,8 @@ WorkingDirectory=/home/pi/workspace/FabBot
 Environment="GOOGLE_APPLICATION_CREDENTIALS=/home/pi/workspace/FabBot/auth/<gcloud_auth>.json"
 ExecStart=/home/pi/.py_virtualenvs/FabBot/bin/python /home/pi/workspace/FabBot/main.py
 KillSignal=SIGINT
+Restart=on-failure
+RestartSec=10s
 
 [Install]
 WantedBy=multi-user.target

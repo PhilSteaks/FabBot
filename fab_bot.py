@@ -13,10 +13,12 @@ from cogs.announcer_cog import Announcer
 from cogs.channel_monitor_cog import ChannelMonitor
 from cogs.commands_cog import Commands
 from message_parser import MessageParser
+from tts_speaker import TtsSpeaker
 
 k_default_voice_channel = "General"
 k_bot_name = "FabBot"
-k_command_prefix = "fab "
+k_command_prefix_lower = "fab "
+k_command_prefix_upper = "Fab "
 
 
 def can_send(channel):
@@ -36,15 +38,18 @@ class FabBot(Bot):
                                   voice_states=True,
                                   messages=True,
                                   guilds=True)
-        super(FabBot, self).__init__(
-            intents=intents,
-            command_prefix=commands.when_mentioned_or(k_command_prefix),
-            *args,
-            **kwargs)
+        super(FabBot, self).__init__(intents=intents,
+                                     command_prefix=commands.when_mentioned_or(
+                                         k_command_prefix_lower,
+                                         k_command_prefix_upper),
+                                     activity=discord.Game("fab help"),
+                                     *args,
+                                     **kwargs)
 
         self.voice_channels = dict()
         self.text_channels = dict()
         self.parser = MessageParser(self)
+        self.announcer = Announcer(self)
 
     async def on_ready(self):
         """ What to do when the bot goes online """
@@ -54,13 +59,16 @@ class FabBot(Bot):
         # reference them by name
         for channel in self.get_all_channels():
             if channel.type == discord.ChannelType.text:
+                self.text_channels[channel.name[1:]] = channel
                 self.text_channels[channel.name] = channel
             if channel.type == discord.ChannelType.voice:
                 self.voice_channels[channel.name] = channel
+        await self.announcer.start_periodic_rejoin()
 
     async def on_message(self, message):
         """ What to do when a message is received on a text channel """
         await self.parser.parse_command(message)
+        await self.announcer.parse_command(message)
 
         # Needed to handle bot commands
         await self.process_commands(message)
@@ -86,4 +94,4 @@ class FabBot(Bot):
         """ Registers the cogs that the bot will have """
         self.add_cog(Commands(self))
         self.add_cog(ChannelMonitor(self))
-        self.add_cog(Announcer(self))
+        self.add_cog(self.announcer)
