@@ -3,6 +3,7 @@
 import discord
 from discord.ext import commands
 
+k_private_channels = ["Beyond FabSteaks", "[200~🥦Beyond FabSteaks"]
 
 class ChannelMonitor(commands.Cog):
     """ Cog to log when a user leaves """
@@ -27,18 +28,29 @@ class ChannelMonitor(commands.Cog):
         return
 
     async def __log_user_leave(self, member, channel):
+        if channel.name in k_private_channels or channel.name[1:] in k_private_channels:
+            return
+
         await self.bot.send_system_message(
             channel.guild, "**%s** has disconnected from %s." %
             (member.display_name, channel.name))
 
     async def __log_user_join(self, member, channel):
-        channel_name = channel.name
+        if channel.name in k_private_channels or channel.name[1:] in k_private_channels:
+            return
+
         await self.bot.send_system_message(
             channel.guild, "**%s** has connected to %s." %
             (member.display_name, channel.name))
 
     async def __log_user_channel_switch(self, member, before, after):
         if before.guild.id == after.guild.id:
+            if before.name in k_private_channels or before.name[1:] in k_private_channels:
+                return await self.__log_user_join(member, after)
+
+            if after in self.private_channels or after.name[1:] in k_private_channels:
+                return await self.__log_user_leave(member, before)
+
             return await self.bot.send_system_message(
                 before.guild, "**%s** has switched from **%s** to **%s**." %
                 (member.display_name, before.name, after.name))

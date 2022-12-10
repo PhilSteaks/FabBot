@@ -37,6 +37,7 @@ class GcloudAudio(AudioGenerator):
 
     def _map_voices(self):
         self._voice_map = {
+            "movie recap": "movie recap aka default not found voice",
             "male 1": "en-US-Wavenet-A",
             "male 2": "en-US-Wavenet-B",
             "male 3": "en-US-Wavenet-D",
@@ -62,6 +63,28 @@ class GcloudAudio(AudioGenerator):
             "indi female 2": "en-IN-Standard-A",
             "indi female 3": "en-IN-Wavenet-D",
             "indi female 4": "en-IN-Standard-D",
+            "aussie male 1": "en-AU-Wavenet-D",
+            "aussie male 2": "en-AU-Wavenet-B",
+            "aussie female 1": "en-AU-Neural2-A",
+            "aussie female 2": "en-AU-Neural2-C",
+            "viet male 1": "vi-VN-Wavenet-D",
+            "viet male 2": "vi-VN-Wavenet-B",
+            "viet female 1": "vi-VN-Wavenet-A",
+            "viet female 2": "vi-VN-Wavenet-C",
+            "chinese test 1": "cmn-CN-Wavenet-B",
+            "jp female 1": "ja-JP-Wavenet-B",
+            "jp male 1": "ja-JP-Wavenet-D",
+            "spanish male 1": "es-US-Wavenet-C",
+            "spanish female 1": "es-US-Wavenet-A",
+            "spanish male 2": "es-US-Neural2-A",
+            "cantonese male 1": "yue-HK-Standard-B",
+            "cantonese female 1": "yue-HK-Standard-C",
+            "filipino male 1": "fil-PH-Wavenet-C",
+            "filipino female 1": "fil-PH-Wavenet-B",
+            "quebecois male 1": "fr-CA-Wavenet-D",
+            "quebecois female 1": "fr-CA-Wavenet-C",
+            "french male 1": "fr-FR-Wavenet-D",
+            "french female 1": "fr-FR-Wavenet-C",
         }
 
     def set_voice(self, voice):

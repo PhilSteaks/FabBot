@@ -17,7 +17,7 @@ from tts_lib.gcloud_tts_audio import GcloudAudio
 from tts_lib.ffmpeg_pcm_audio import FFmpegPCMAudio
 
 k_rejoin_frequency = 60
-k_default_voice = "uk male 1"
+k_default_voice = "aussie male 1"
 k_gtts_voice = "robot"
 k_audio_dir = "audio_files"
 k_config_dir = "configs"
@@ -28,6 +28,8 @@ switch_message_template = "{0} has switched channels."
 join_hint_template = "{0}_join"
 leave_hint_template = "{0}_leave"
 switch_hint_template = "{0}_switch"
+
+k_private_channels = ["Beyond FabSteaks"]
 
 
 class Announcer(commands.Cog):
@@ -48,6 +50,10 @@ class Announcer(commands.Cog):
         self._audio_generator = None
         self._available_generators = list()
         self._users = dict()
+
+        self._private_channels = list()
+        #for channel_name in k_private_channels:
+        #    self._private_channels.append(self.bot.voice_channels[channel_name])
 
         self.__init_dir()
         self.__init_generators()
@@ -218,15 +224,15 @@ class Announcer(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         """ What to do when someone leaves or joins a voice channel """
-        # User joins a channel
-        if before.channel is None and after.channel is not None:
+        # User joins the channel
+        if after.channel is not None and before.channel is None:
             voice_client = after.channel.guild.voice_client
             if voice_client is not None:
                 if voice_client.channel is after.channel:
                     await self.announce_update(voice_client, member, "join")
             return
 
-        # User leaves a channel
+        # User leaves the channel
         if before.channel is not None and after.channel is None:
             voice_client = before.channel.guild.voice_client
             if voice_client is not None:
@@ -239,7 +245,7 @@ class Announcer(commands.Cog):
             voice_client = before.channel.guild.voice_client
             if voice_client is not None:
                 if voice_client.channel is before.channel:
-                    await self.announce_update(voice_client, member, "switch")
+                    await self.announce_update(voice_client, member, "leave")
                 if voice_client.channel is after.channel:
                     await self.announce_update(voice_client, member, "join")
             return

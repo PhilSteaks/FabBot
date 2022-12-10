@@ -13,7 +13,6 @@ from cogs.announcer_cog import Announcer
 from cogs.channel_monitor_cog import ChannelMonitor
 from cogs.commands_cog import Commands
 from message_parser import MessageParser
-from tts_speaker import TtsSpeaker
 
 k_default_voice_channel = "General"
 k_bot_name = "FabBot"
@@ -62,7 +61,10 @@ class FabBot(Bot):
                 self.text_channels[channel.name[1:]] = channel
                 self.text_channels[channel.name] = channel
             if channel.type == discord.ChannelType.voice:
+                self.voice_channels[channel.name[1:]] = channel
                 self.voice_channels[channel.name] = channel
+        for key, value in self.voice_channels.items():
+            print(key)
         await self.announcer.start_periodic_rejoin()
 
     async def on_message(self, message):
