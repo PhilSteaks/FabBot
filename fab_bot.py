@@ -11,7 +11,10 @@ from discord.ext.commands import Bot
 from discord import app_commands
 
 # Our libraries
+from cogs.channel_announcer import ChannelAnnouncer
 from cogs.speaker import Speaker
+from cogs.tts_reader import TtsReader
+from cogs.channel_logger import ChannelLogger
 from utils import logger
 
 k_default_voice_channel = "General"
@@ -69,17 +72,16 @@ class FabBot(Bot):
         """ Normalized voice channel names ignoring the emoji """
         return normalized_channel(self.voice_channels, channel_name)
 
-    async def setup_hook(self):
-        """ Initial init """
-        extension_list = [
-                ]
-        for extension in extension_list:
-            await self.load_extension(extension)
+    def current_voice_client(self):
+        """ Returns the current voice client """
+        if self.speaker_cog is None:
+            logger.warning("Unable to retrieve voice client. Speaker cog is not loaded.")
+            return None
 
-    async def on_ready(self):
-        """ What to do when the bot goes online """
-        logger.info("Connected as {0.name}, {0.id}".format(self.user))
+        return self.speaker_cog.voice_client
 
+    def _scan_channels(self):
+        """ Scans the channels and adds them to be referenced later """
         # Create a hash table of all the channels on the server so we can
         # reference them by name
         for channel in self.get_all_channels():
@@ -95,10 +97,30 @@ class FabBot(Bot):
         for key, _ in self.text_channels.items():
             logger.debug("Text channels visible:\n" + key)
 
+    async def _load_cogs(self):
+        """ Loads and inits all the cogs """
+        await self.add_cog(ChannelAnnouncer(self))
+        await self.add_cog(TtsReader(self))
+        await self.add_cog(ChannelLogger(self))
+
         self.speaker_cog = Speaker(self)
         await self.add_cog(self.speaker_cog)
         await self.speaker_cog.async_init()
         await self.loop.create_task(self.speaker_cog.audio_loop())
+
+    async def setup_hook(self):
+        """ Initial init """
+        extension_list = [
+                ]
+        for extension in extension_list:
+            await self.load_extension(extension)
+
+    async def on_ready(self):
+        """ What to do when the bot goes online """
+        logger.info("Connected as {0.name}, {0.id}".format(self.user))
+
+        self._scan_channels()
+        await self._load_cogs()
 
     async def on_message(self, message):
         """ What to do when a message is received on a text channel """
@@ -107,7 +129,7 @@ class FabBot(Bot):
 
     async def send_message(self, channel, message):
         """ A wrapper for sending messages """
-        text_channel = self.normalized_text_channel(channel)
+        text_channel = channel
         if text_channel is None:
             logger.warning("Text channel not found: " + channel)
             return
@@ -130,7 +152,7 @@ class FabBot(Bot):
     async def say_message(self, message):
         """ A wrapper for saying voice messages """
         if self.speaker_cog is None:
-            logger.warning("Unable to speak message. Announcer cog is not loaded.")
+            logger.warning("Unable to speak message. Speaker cog is not loaded.")
             return
 
-        await self.speaker_cog.speak_message(message)
+        await self.speaker_cog.speak_audio(message)

@@ -4,6 +4,7 @@ speaker.py
 # Standard library
 import asyncio
 from async_timeout import timeout
+import re
 
 # Third party libaries
 import discord
@@ -18,9 +19,10 @@ from lib.tts.ffmpeg_pcm_audio import FFmpegPCMAudio
 from utils import logger
 
 k_rejoin_frequency = 60  # seconds
-k_initial_channel = "test"
+k_initial_channel = "General"
 k_join_text = "Hi"
 k_leave_text = "bye"
+k_custom_emoji_regex = r"<a*:([a-zA-Z0-9_\\\\/\=\+\@\#\$\%\!\^\&\*\(\)-\?\.\,\;\:\']*):[0-9]*>"
 
 async def setup(bot: commands.Bot):
     """ Loads the speaker """
@@ -36,7 +38,7 @@ class Speaker(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         """ Class constructor """
         self._bot: commands.Bot = bot
-        self._voice_client = None
+        self.voice_client = None
         self._audio_generator = GcloudAudio()
         self._desired_channel = None
         self._message_queue = asyncio.Queue()
@@ -65,7 +67,7 @@ class Speaker(commands.Cog):
             return
 
         logger.info("Unexpected disconnect detected. Rejoining channel.")
-        self._voice_client = await self._desired_channel.connect(
+        self.voice_client = await self._desired_channel.connect(
             reconnect=False, timeout=1)
         await self.speak_audio(k_join_text)
 
@@ -82,7 +84,7 @@ class Speaker(commands.Cog):
             except asyncio.TimeoutError:
                 continue
 
-            if not self._voice_client:
+            if not self.voice_client:
                 continue
 
             logger.debug("Playing message " + message)
@@ -90,7 +92,7 @@ class Speaker(commands.Cog):
             source = discord.PCMVolumeTransformer(
                 FFmpegPCMAudio(audio_bytes, pipe=True))
 
-            self._voice_client.play(source,
+            self.voice_client.play(source,
                     after=lambda _: self._bot.loop.call_soon_threadsafe(self._audio_done.set))
             await self._audio_done.wait()
             logger.debug("Done playing message.")
@@ -99,6 +101,9 @@ class Speaker(commands.Cog):
 
     async def speak_audio(self, text: str) -> None:
         """ Adds the text to the speaker queue. """
+        if "<" in text and ">" in text and ":" in text:
+            text = re.sub(k_custom_emoji_regex, r' \1 ', text)
+
         await self._message_queue.put(text)
 
     @commands.hybrid_command()
@@ -111,8 +116,8 @@ class Speaker(commands.Cog):
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
 
-        self._voice_client = await channel.connect()
-        if self._voice_client is None:
+        self.voice_client = await channel.connect()
+        if self.voice_client is None:
             logger.warning("Failed to join voice channel " + channel_name + ".")
             await ctx.channel.send("Failed to join voice channel " + channel_name + ".")
             return
@@ -121,13 +126,13 @@ class Speaker(commands.Cog):
         logger.info("Joined voice channel " + channel_name)
         await ctx.channel.send("Joined voice channel " + channel_name + ".")
 
-        self._voice_client.stop()
+        self.voice_client.stop()
         await self.speak_audio(k_join_text)
 
     @commands.hybrid_command()
     async def disconnect(self, ctx: commands.Context) -> None:
         """ Disconnects from the current voice channel """
-        if self._voice_client is not None:
+        if self.voice_client is not None:
             await self.speak_audio(k_leave_text)
             await ctx.voice_client.disconnect()
             self._desired_channel = None
@@ -142,7 +147,7 @@ class Speaker(commands.Cog):
     @commands.hybrid_command(name = "say")
     async def say(self, ctx: commands.Context, text: str) -> None:
         """ <text> Speak some text to the channel """
-        if (self._voice_client is None) or (not self._voice_client.is_connected()):
+        if (self.voice_client is None) or (not self.voice_client.is_connected()):
             await ctx.channel.send(
                 "I'm not currently connected to a voice channel.")
             logger.warning("say failed: Not connected to a voice channel.")
@@ -152,9 +157,9 @@ class Speaker(commands.Cog):
     @commands.hybrid_command(name = "stop")
     async def stop(self, ctx: commands.Context) -> None:
         """ Stops speaking immediately. """
-        if self._voice_client is None:
+        if self.voice_client is None:
             await ctx.channel.send(
                 "I'm not currently connected to a voice channel.")
             logger.warning("say failed: Not connected to a voice channel.")
             return
-        self._voice_client.stop()
+        self.voice_client.stop()
