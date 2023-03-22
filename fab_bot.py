@@ -2,6 +2,7 @@
 
 # Standard library
 import asyncio
+import logging
 
 # Third party libaries
 import discord
@@ -36,6 +37,7 @@ class FabBot(Bot):
         intents = discord.Intents(members=True,
                                   voice_states=True,
                                   messages=True,
+                                  message_content=True,
                                   guilds=True)
         super(FabBot, self).__init__(intents=intents,
                                      command_prefix=commands.when_mentioned_or(
@@ -54,6 +56,8 @@ class FabBot(Bot):
         """ What to do when the bot goes online """
         print("Connected as {0.name}, {0.id}".format(self.user))
 
+        await self.register_cogs()
+
         # Create a hash table of all the channels on the server so we can
         # reference them by name
         for channel in self.get_all_channels():
@@ -67,8 +71,14 @@ class FabBot(Bot):
             print(key)
         await self.announcer.start_periodic_rejoin()
 
+        cog = self.get_cog('Announcer')
+        commands = cog.get_commands()
+        print([c.name for c in commands])
+
     async def on_message(self, message):
         """ What to do when a message is received on a text channel """
+        logging.info(message)
+        print(message)
         await self.parser.parse_command(message)
         await self.announcer.parse_command(message)
 
@@ -92,8 +102,8 @@ class FabBot(Bot):
             return
         await self.send_message(channel, message)
 
-    def register_cogs(self):
+    async def register_cogs(self):
         """ Registers the cogs that the bot will have """
-        self.add_cog(Commands(self))
-        self.add_cog(ChannelMonitor(self))
-        self.add_cog(self.announcer)
+        await self.add_cog(Commands(self))
+        await self.add_cog(ChannelMonitor(self))
+        await self.add_cog(self.announcer)

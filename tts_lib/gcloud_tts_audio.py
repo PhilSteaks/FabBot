@@ -2,6 +2,7 @@
 
 import os
 import pathlib
+import logging
 
 from google.cloud import texttospeech
 from tts_lib.audio_generator import AudioGenerator
@@ -13,11 +14,17 @@ class GcloudAudio(AudioGenerator):
         self._inited = False
         self._audio_dir = audio_directory
         self._suffix = ".mp3"
+        print("tts client init")
         self._tts_client = texttospeech.TextToSpeechClient()
+        print("tts client init done")
         self._gcloud_prefix = "gcloud_"
         self._voice_map = dict()
+        self._locale_map = dict()
+        self._gender_map = dict()
         self._map_voices()
         self._voice = self._voice_map[self.default_voice]
+        self._locale = self._locale_map[self.default_voice]
+        self._gender = self._gender_map[self.default_voice]
         self._inited = True
 
     @property
@@ -37,7 +44,6 @@ class GcloudAudio(AudioGenerator):
 
     def _map_voices(self):
         self._voice_map = {
-            "movie recap": "movie recap aka default not found voice",
             "male 1": "en-US-Wavenet-A",
             "male 2": "en-US-Wavenet-B",
             "male 3": "en-US-Wavenet-D",
@@ -76,7 +82,7 @@ class GcloudAudio(AudioGenerator):
             "jp male 1": "ja-JP-Wavenet-D",
             "spanish male 1": "es-US-Wavenet-C",
             "spanish female 1": "es-US-Wavenet-A",
-            "spanish male 2": "es-US-Neural2-A",
+            "spanish female 2": "es-US-Neural2-A",
             "cantonese male 1": "yue-HK-Standard-B",
             "cantonese female 1": "yue-HK-Standard-C",
             "filipino male 1": "fil-PH-Wavenet-C",
@@ -87,19 +93,127 @@ class GcloudAudio(AudioGenerator):
             "french female 1": "fr-FR-Wavenet-C",
         }
 
+        self._locale_map = {
+            "male 1": "en-US",
+            "male 2": "en-US",
+            "male 3": "en-US",
+            "male 4": "en-USJ",
+            "female 1": "en-US",
+            "female 2": "en-US",
+            "female 3": "en-US",
+            "female 4": "en-US",
+            "female 5": "en-US",
+            "uk male 1": "en-GB",
+            "uk male 2": "en-GB",
+            "uk male 3": "en-GB",
+            "uk male 4": "en-GB",
+            "uk female 1": "en-GB",
+            "uk female 2": "en-GB",
+            "uk female 3": "en-GB",
+            "uk female 4": "en-GB",
+            "indi male 1": "en-IN",
+            "indi male 2": "en-IN",
+            "indi male 3": "en-IN",
+            "indi male 4": "en-IN",
+            "indi female 1": "en-IN",
+            "indi female 2": "en-IN",
+            "indi female 3": "en-IN",
+            "indi female 4": "en-IN",
+            "aussie male 1": "en-AU",
+            "aussie male 2": "en-AU",
+            "aussie female 1": "en-AU",
+            "aussie female 2": "en-AU",
+            "viet male 1": "vi-VN",
+            "viet male 2": "vi-VN",
+            "viet female 1": "vi-VN",
+            "viet female 2": "vi-VN",
+            "chinese test 1": "cmn-CN",
+            "jp female 1": "ja-JP",
+            "jp male 1": "ja-JP",
+            "spanish male 1": "es-US",
+            "spanish female 1": "es-US",
+            "spanish female 2": "es-US",
+            "cantonese male 1": "yue-HK",
+            "cantonese female 1": "yue-HK",
+            "filipino male 1": "fil-PH",
+            "filipino female 1": "fil-PH",
+            "quebecois male 1": "fr-CA",
+            "quebecois female 1": "fr-CA",
+            "french male 1": "fr-FR",
+            "french female 1": "fr-FR",
+        }
+
+        self._gender_map = {
+            "male 1": texttospeech.SsmlVoiceGender.MALE,
+            "male 2": texttospeech.SsmlVoiceGender.MALE,
+            "male 3": texttospeech.SsmlVoiceGender.MALE,
+            "male 4": texttospeech.SsmlVoiceGender.MALE,
+            "female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "female 2": texttospeech.SsmlVoiceGender.FEMALE,
+            "female 3": texttospeech.SsmlVoiceGender.FEMALE,
+            "female 4": texttospeech.SsmlVoiceGender.FEMALE,
+            "female 5": texttospeech.SsmlVoiceGender.FEMALE,
+            "uk male 1": texttospeech.SsmlVoiceGender.MALE,
+            "uk male 2": texttospeech.SsmlVoiceGender.MALE,
+            "uk male 3": texttospeech.SsmlVoiceGender.MALE,
+            "uk male 4": texttospeech.SsmlVoiceGender.MALE,
+            "uk female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "uk female 2": texttospeech.SsmlVoiceGender.FEMALE,
+            "uk female 3": texttospeech.SsmlVoiceGender.FEMALE,
+            "uk female 4": texttospeech.SsmlVoiceGender.FEMALE,
+            "indi male 1": texttospeech.SsmlVoiceGender.MALE,
+            "indi male 2": texttospeech.SsmlVoiceGender.MALE,
+            "indi male 3": texttospeech.SsmlVoiceGender.MALE,
+            "indi male 4": texttospeech.SsmlVoiceGender.MALE,
+            "indi female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "indi female 2": texttospeech.SsmlVoiceGender.FEMALE,
+            "indi female 3": texttospeech.SsmlVoiceGender.FEMALE,
+            "indi female 4": texttospeech.SsmlVoiceGender.FEMALE,
+            "aussie male 1": texttospeech.SsmlVoiceGender.MALE,
+            "aussie male 2": texttospeech.SsmlVoiceGender.MALE,
+            "aussie female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "aussie female 2": texttospeech.SsmlVoiceGender.FEMALE,
+            "viet male 1": texttospeech.SsmlVoiceGender.MALE,
+            "viet male 2": texttospeech.SsmlVoiceGender.MALE,
+            "viet female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "viet female 2": texttospeech.SsmlVoiceGender.FEMALE,
+            "chinese test 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "jp female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "jp male 1": texttospeech.SsmlVoiceGender.MALE,
+            "spanish male 1": texttospeech.SsmlVoiceGender.MALE,
+            "spanish female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "spanish female 2": texttospeech.SsmlVoiceGender.FEMALE,
+            "cantonese male 1": texttospeech.SsmlVoiceGender.MALE,
+            "cantonese female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "filipino male 1": texttospeech.SsmlVoiceGender.MALE,
+            "filipino female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "quebecois male 1": texttospeech.SsmlVoiceGender.MALE,
+            "quebecois female 1": texttospeech.SsmlVoiceGender.FEMALE,
+            "french male 1": texttospeech.SsmlVoiceGender.MALE,
+            "french female 1": texttospeech.SsmlVoiceGender.FEMALE,
+        }
+
+
     def set_voice(self, voice):
         self._voice = self._voice_map[voice]
+        self._locale = self._locale_map[voice]
+        self._gender = self._gender_map[voice]
 
     def _synth_audio(self, text):
         synthesis_input = texttospeech.SynthesisInput(text=text)
         voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",
+            language_code=self._locale,
             name=self._voice,
-            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL)
+            ssml_gender=self._gender)
         audio_config = texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.MP3)
+        print("generating voice for " + self._voice)
+        logging.info("generating voice for " + self._voice)
         response = self._tts_client.synthesize_speech(
             input=synthesis_input, voice=voice, audio_config=audio_config)
+        print("done")
+        logging.info("generating voice done")
+        logging.info(response)
         return response
 
     def generate_audio_file(self, text, file_hint):

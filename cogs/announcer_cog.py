@@ -4,6 +4,7 @@
 import asyncio
 import os
 import pathlib
+import logging
 
 # Third party libaries
 import discord
@@ -17,7 +18,7 @@ from tts_lib.gcloud_tts_audio import GcloudAudio
 from tts_lib.ffmpeg_pcm_audio import FFmpegPCMAudio
 
 k_rejoin_frequency = 60
-k_default_voice = "aussie male 1"
+k_default_voice = "uk male 1"
 k_gtts_voice = "robot"
 k_audio_dir = "audio_files"
 k_config_dir = "configs"
@@ -132,6 +133,7 @@ class Announcer(commands.Cog):
         if self.bot.voice_clients:
             return
         voice_client = await self.bot.voice_channels["General"].connect(
+        #  voice_client = await self.bot.voice_channels["✅Yes"].connect(
             reconnect=False, timeout=1)
         await self.say_audio(voice_client, "hello")
 
@@ -267,6 +269,11 @@ class Announcer(commands.Cog):
             # TODO(Phil): Remove this when the gcloud lib can say audio
             await self.say_audio(ctx.voice_client, "bye")
             await ctx.voice_client.disconnect()
+        else:
+            await ctx.channel.send(
+                "I'm not currently connected to a voice channel.")
+            logging.warning("disconnect failed: Not connected to a voice channel.")
+
 
     @commands.command()
     async def say(self, ctx, *, text):
@@ -274,6 +281,7 @@ class Announcer(commands.Cog):
         if (ctx.voice_client is None) or (not ctx.voice_client.is_connected()):
             await ctx.channel.send(
                 "I'm not currently connected to a voice channel.")
+            logging.warning("say failed: Not connected to a voice channel.")
             return
         await self.say_audio(ctx.voice_client, text)
 
