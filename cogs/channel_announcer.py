@@ -45,21 +45,21 @@ class ChannelAnnouncer(commands.Cog):
         # User joins the channel
         if after.channel is not None and before.channel is None:
             if after.channel is voice_client.channel:
-                await self._bot.say_message(member +
+                await self._bot.say_message(member.display_name +
                                             " has joined the channel.")
             return
 
         # User leaves the channel
         if before.channel is not None and after.channel is None:
             if before.channel is voice_client.channel:
-                await self._bot.say_message(member + " has left the channel.")
+                await self._bot.say_message(member.display_name + " has left the channel.")
             return
 
         # User switches channels
         if before.channel is not after.channel:
             if voice_client.channel is before.channel:
-                await self._bot.say_message(member + " has left the channel.")
+                await self._bot.say_message(member.display_name + " has left the channel.")
             if voice_client.channel is after.channel:
-                await self._bot.say_message(member +
+                await self._bot.say_message(member.display_name +
                                             " has joined the channel.")
             return
