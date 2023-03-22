@@ -4,8 +4,12 @@
 import os
 import sys
 
+# Third part libraries
+from discord.ext import commands
+
 # Our libraries
 from fab_bot import FabBot
+import utils.logger as logger
 
 
 def get_token():
@@ -24,13 +28,17 @@ def get_token():
             format(k_token_file_name))
         return token
 
+token = get_token()
+if not token:
+    sys.exit()
 
-if __name__ == "__main__":
-    token = get_token()
-    if not token:
-        sys.exit()
+logger.info("Starting Bot...")
+bot = FabBot()
 
-    print("Starting Bot...")
-    bot = FabBot()
-    bot.run(token)
-    print("Stopped Bot")
+@bot.command()
+async def sync(ctx: commands.Context) -> None:
+    """ Sync slash commands """
+    await ctx.bot.tree.sync()
+
+bot.run(token)
+logger.info("Stopped Bot")

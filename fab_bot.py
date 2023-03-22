@@ -8,12 +8,11 @@ import logging
 import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
+from discord import app_commands
 
 # Our libraries
-from cogs.announcer_cog import Announcer
-from cogs.channel_monitor_cog import ChannelMonitor
-from cogs.commands_cog import Commands
-from message_parser import MessageParser
+from cogs.speaker import Speaker
+from utils import logger
 
 k_default_voice_channel = "General"
 k_bot_name = "FabBot"
@@ -30,8 +29,19 @@ def can_send(channel):
             return True
     return False
 
+def normalized_channel(channel_dict, channel_name):
+    """ Normalized channel names ignoring the emoji """
+    if channel_name.lower() in channel_dict:
+        return channel_dict[channel_name.lower()]
+    if channel_name[1:].lower() in channel_dict:
+        return channel_dict[channel_name[1:].lower()]
+
+    logger.warning("Channel " + channel_name + " does not exist.")
+    return None
+
 
 class FabBot(Bot):
+    """ Main bot class that holds the cogs """
     def __init__(self, *args, **kwargs):
         """ Class Constructor """
         intents = discord.Intents(members=True,
@@ -39,7 +49,7 @@ class FabBot(Bot):
                                   messages=True,
                                   message_content=True,
                                   guilds=True)
-        super(FabBot, self).__init__(intents=intents,
+        super().__init__(intents=intents,
                                      command_prefix=commands.when_mentioned_or(
                                          k_command_prefix_lower,
                                          k_command_prefix_upper),
@@ -49,45 +59,60 @@ class FabBot(Bot):
 
         self.voice_channels = dict()
         self.text_channels = dict()
-        self.parser = MessageParser(self)
-        self.announcer = Announcer(self)
+        self.speaker_cog = None
+
+    def normalized_text_channel(self, channel_name):
+        """ Normalized text channel names ignoring the emoji """
+        return normalized_channel(self.text_channels, channel_name)
+
+    def normalized_voice_channel(self, channel_name):
+        """ Normalized voice channel names ignoring the emoji """
+        return normalized_channel(self.voice_channels, channel_name)
+
+    async def setup_hook(self):
+        """ Initial init """
+        extension_list = [
+                ]
+        for extension in extension_list:
+            await self.load_extension(extension)
 
     async def on_ready(self):
         """ What to do when the bot goes online """
-        print("Connected as {0.name}, {0.id}".format(self.user))
-
-        await self.register_cogs()
+        logger.info("Connected as {0.name}, {0.id}".format(self.user))
 
         # Create a hash table of all the channels on the server so we can
         # reference them by name
         for channel in self.get_all_channels():
             if channel.type == discord.ChannelType.text:
-                self.text_channels[channel.name[1:]] = channel
-                self.text_channels[channel.name] = channel
+                self.text_channels[channel.name.lower()] = channel
+                self.text_channels[channel.name[1:].lower()] = channel
             if channel.type == discord.ChannelType.voice:
-                self.voice_channels[channel.name[1:]] = channel
-                self.voice_channels[channel.name] = channel
-        for key, value in self.voice_channels.items():
-            print(key)
-        await self.announcer.start_periodic_rejoin()
+                self.voice_channels[channel.name.lower()] = channel
+                self.voice_channels[channel.name[1:].lower()] = channel
 
-        cog = self.get_cog('Announcer')
-        commands = cog.get_commands()
-        print([c.name for c in commands])
+        for key, _ in self.voice_channels.items():
+            logger.debug("Voice channels visible:\n" + key)
+        for key, _ in self.text_channels.items():
+            logger.debug("Text channels visible:\n" + key)
+
+        self.speaker_cog = Speaker(self)
+        await self.add_cog(self.speaker_cog)
+        await self.speaker_cog.async_init()
+        await self.loop.create_task(self.speaker_cog.audio_loop())
 
     async def on_message(self, message):
         """ What to do when a message is received on a text channel """
-        logging.info(message)
-        print(message)
-        await self.parser.parse_command(message)
-        await self.announcer.parse_command(message)
-
         # Needed to handle bot commands
         await self.process_commands(message)
 
     async def send_message(self, channel, message):
         """ A wrapper for sending messages """
-        await channel.send(message)
+        text_channel = self.normalized_text_channel(channel)
+        if text_channel is None:
+            logger.warning("Text channel not found: " + channel)
+            return
+
+        await text_channel.send(message)
 
     async def send_system_message(self, guild, message):
         """ Sends to the server's system channel. If not accessible, sends to a
@@ -95,15 +120,17 @@ class FabBot(Bot):
         """
         channel = guild.system_channel
         if not can_send(channel):
-            channel = self.text_channels["system"]
+            channel = self.normalized_text_channel("system")
         if channel is None:
-            print("Server {0.name}({0.id}) does not have a system channel.".
+            logger.info("Server {0.name}({0.id}) does not have a system channel.".
                   format(guild))
             return
         await self.send_message(channel, message)
 
-    async def register_cogs(self):
-        """ Registers the cogs that the bot will have """
-        await self.add_cog(Commands(self))
-        await self.add_cog(ChannelMonitor(self))
-        await self.add_cog(self.announcer)
+    async def say_message(self, message):
+        """ A wrapper for saying voice messages """
+        if self.speaker_cog is None:
+            logger.warning("Unable to speak message. Announcer cog is not loaded.")
+            return
+
+        await self.speaker_cog.speak_message(message)
