@@ -32,6 +32,7 @@ def can_send(channel):
             return True
     return False
 
+
 def normalized_channel(channel_dict, channel_name):
     """ Normalized channel names ignoring the emoji """
     if channel_name.lower() in channel_dict:
@@ -53,12 +54,11 @@ class FabBot(Bot):
                                   message_content=True,
                                   guilds=True)
         super().__init__(intents=intents,
-                                     command_prefix=commands.when_mentioned_or(
-                                         k_command_prefix_lower,
-                                         k_command_prefix_upper),
-                                     activity=discord.Game("fab help"),
-                                     *args,
-                                     **kwargs)
+                         command_prefix=commands.when_mentioned_or(
+                             k_command_prefix_lower, k_command_prefix_upper),
+                         activity=discord.Game("fab help"),
+                         *args,
+                         **kwargs)
 
         self.voice_channels = dict()
         self.text_channels = dict()
@@ -75,7 +75,8 @@ class FabBot(Bot):
     def current_voice_client(self):
         """ Returns the current voice client """
         if self.speaker_cog is None:
-            logger.warning("Unable to retrieve voice client. Speaker cog is not loaded.")
+            logger.warning(
+                "Unable to retrieve voice client. Speaker cog is not loaded.")
             return None
 
         return self.speaker_cog.voice_client
@@ -110,8 +111,7 @@ class FabBot(Bot):
 
     async def setup_hook(self):
         """ Initial init """
-        extension_list = [
-                ]
+        extension_list = []
         for extension in extension_list:
             await self.load_extension(extension)
 
@@ -144,15 +144,17 @@ class FabBot(Bot):
         if not can_send(channel):
             channel = self.normalized_text_channel("system")
         if channel is None:
-            logger.info("Server {0.name}({0.id}) does not have a system channel.".
-                  format(guild))
+            logger.info(
+                "Server {0.name}({0.id}) does not have a system channel.".
+                format(guild))
             return
         await self.send_message(channel, message)
 
     async def say_message(self, message):
         """ A wrapper for saying voice messages """
         if self.speaker_cog is None:
-            logger.warning("Unable to speak message. Speaker cog is not loaded.")
+            logger.warning(
+                "Unable to speak message. Speaker cog is not loaded.")
             return
 
         await self.speaker_cog.speak_audio(message)

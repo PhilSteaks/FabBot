@@ -5,6 +5,7 @@ from discord.ext import commands
 
 k_private_channels = ["Beyond FabSteaks", "[200~🥦Beyond FabSteaks"]
 
+
 class ChannelLogger(commands.Cog):
     """ Cog to log when a user leaves """
     def __init__(self, bot):
@@ -28,7 +29,8 @@ class ChannelLogger(commands.Cog):
         return
 
     async def __log_user_leave(self, member, channel):
-        if channel.name in k_private_channels or channel.name[1:] in k_private_channels:
+        if channel.name in k_private_channels or channel.name[
+                1:] in k_private_channels:
             return
 
         await self.bot.send_system_message(
@@ -36,7 +38,8 @@ class ChannelLogger(commands.Cog):
             (member.display_name, channel.name))
 
     async def __log_user_join(self, member, channel):
-        if channel.name in k_private_channels or channel.name[1:] in k_private_channels:
+        if channel.name in k_private_channels or channel.name[
+                1:] in k_private_channels:
             return
 
         await self.bot.send_system_message(
@@ -45,10 +48,12 @@ class ChannelLogger(commands.Cog):
 
     async def __log_user_channel_switch(self, member, before, after):
         if before.guild.id == after.guild.id:
-            if before.name in k_private_channels or before.name[1:] in k_private_channels:
+            if before.name in k_private_channels or before.name[
+                    1:] in k_private_channels:
                 return await self.__log_user_join(member, after)
 
-            if after in self.private_channels or after.name[1:] in k_private_channels:
+            if after in self.private_channels or after.name[
+                    1:] in k_private_channels:
                 return await self.__log_user_leave(member, before)
 
             return await self.bot.send_system_message(

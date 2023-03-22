@@ -24,13 +24,16 @@ k_join_text = "Hi"
 k_leave_text = "bye"
 k_custom_emoji_regex = r"<a*:([a-zA-Z0-9_\\\\/\=\+\@\#\$\%\!\^\&\*\(\)-\?\.\,\;\:\']*):[0-9]*>"
 
+
 async def setup(bot: commands.Bot):
     """ Loads the speaker """
     await bot.add_cog(Speaker(bot))
 
+
 async def teardown(bot: commands.Bot):
     """ unload ths speaker """
     await bot.remove_cog("Speaker")
+
 
 class Speaker(commands.Cog):
     """ Speaks messages in the current voice channel.
@@ -50,10 +53,11 @@ class Speaker(commands.Cog):
     async def async_init(self) -> None:
         """ Init async tasks """
         await self._bot.wait_until_ready()
-        self._desired_channel = self._bot.normalized_voice_channel(k_initial_channel)
+        self._desired_channel = self._bot.normalized_voice_channel(
+            k_initial_channel)
         self._rejoin_channel.start()
 
-    @tasks.loop(seconds = k_rejoin_frequency)
+    @tasks.loop(seconds=k_rejoin_frequency)
     async def _rejoin_channel(self) -> None:
         """ Join the channel if flag is set """
         # Disable if flag is not set
@@ -93,7 +97,8 @@ class Speaker(commands.Cog):
                 FFmpegPCMAudio(audio_bytes, pipe=True))
 
             self.voice_client.play(source,
-                    after=lambda _: self._bot.loop.call_soon_threadsafe(self._audio_done.set))
+                                   after=lambda _: self._bot.loop.
+                                   call_soon_threadsafe(self._audio_done.set))
             await self._audio_done.wait()
             logger.debug("Done playing message.")
             source.cleanup()
@@ -111,15 +116,18 @@ class Speaker(commands.Cog):
         """ <channel> Join the voice channel specified in the command """
         channel = self._bot.normalized_voice_channel(channel_name)
         if channel is None:
-            await ctx.channel.send("Channel " + channel_name + " could not be found.")
+            await ctx.channel.send("Channel " + channel_name +
+                                   " could not be found.")
 
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
 
         self.voice_client = await channel.connect()
         if self.voice_client is None:
-            logger.warning("Failed to join voice channel " + channel_name + ".")
-            await ctx.channel.send("Failed to join voice channel " + channel_name + ".")
+            logger.warning("Failed to join voice channel " + channel_name +
+                           ".")
+            await ctx.channel.send("Failed to join voice channel " +
+                                   channel_name + ".")
             return
 
         self._desired_channel = channel
@@ -142,19 +150,21 @@ class Speaker(commands.Cog):
         else:
             await ctx.channel.send(
                 "I'm not currently connected to a voice channel.")
-            logger.warning("disconnect failed: Not connected to a voice channel.")
+            logger.warning(
+                "disconnect failed: Not connected to a voice channel.")
 
-    @commands.hybrid_command(name = "say")
+    @commands.hybrid_command(name="say")
     async def say(self, ctx: commands.Context, text: str) -> None:
         """ <text> Speak some text to the channel """
-        if (self.voice_client is None) or (not self.voice_client.is_connected()):
+        if (self.voice_client is
+                None) or (not self.voice_client.is_connected()):
             await ctx.channel.send(
                 "I'm not currently connected to a voice channel.")
             logger.warning("say failed: Not connected to a voice channel.")
             return
         await self.speak_audio(text)
 
-    @commands.hybrid_command(name = "stop")
+    @commands.hybrid_command(name="stop")
     async def stop(self, ctx: commands.Context) -> None:
         """ Stops speaking immediately. """
         if self.voice_client is None:

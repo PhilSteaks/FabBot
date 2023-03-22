@@ -14,13 +14,16 @@ from discord.ext import tasks
 # Our libraries
 from utils import logger
 
+
 async def setup(bot: commands.Bot):
     """ Loads the reader """
     await bot.add_cog(TtsReader(bot))
 
+
 async def teardown(bot: commands.Bot):
     """ unload ths reader """
     await bot.remove_cog("TtsReader")
+
 
 class TtsReader(commands.Cog):
     """ Speaks all messages written to the tts channel """

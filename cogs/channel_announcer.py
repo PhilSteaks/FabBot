@@ -13,13 +13,16 @@ from discord.ext import tasks
 # Our libraries
 from utils import logger
 
+
 async def setup(bot: commands.Bot):
     """ Loads the announcer """
     await bot.add_cog(ChannelAnnouncer(bot))
 
+
 async def teardown(bot: commands.Bot):
     """ unload ths announcer """
     await bot.remove_cog("ChannelAnnouncer")
+
 
 class ChannelAnnouncer(commands.Cog):
     """ Announces when someone leaves or joins the voice channel.
@@ -42,7 +45,8 @@ class ChannelAnnouncer(commands.Cog):
         # User joins the channel
         if after.channel is not None and before.channel is None:
             if after.channel is voice_client.channel:
-                await self._bot.say_message(member + " has joined the channel.")
+                await self._bot.say_message(member +
+                                            " has joined the channel.")
             return
 
         # User leaves the channel
@@ -56,5 +60,6 @@ class ChannelAnnouncer(commands.Cog):
             if voice_client.channel is before.channel:
                 await self._bot.say_message(member + " has left the channel.")
             if voice_client.channel is after.channel:
-                await self._bot.say_message(member + " has joined the channel.")
+                await self._bot.say_message(member +
+                                            " has joined the channel.")
             return

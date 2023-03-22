@@ -28,6 +28,7 @@ def get_token():
             format(k_token_file_name))
         return token
 
+
 token = get_token()
 if not token:
     sys.exit()
@@ -35,10 +36,12 @@ if not token:
 logger.info("Starting Bot...")
 bot = FabBot()
 
+
 @bot.command()
 async def sync(ctx: commands.Context) -> None:
     """ Sync slash commands """
     await ctx.bot.tree.sync()
+
 
 bot.run(token)
 logger.info("Stopped Bot")
